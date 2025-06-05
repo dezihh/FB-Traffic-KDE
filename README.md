@@ -5,6 +5,6 @@
 
 Debugging help:
 - Restart Plasma interface: kquitapp5 plasmashell && plasmashell &
-- Restart: plasmoidviewer --applet com.github.dezi.fboxtraffic
-- Re-register service: kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezi.fboxtraffic
-- Update service: kpackagetool5 --upgrade ~/.local/share/plasma/plasmoids/com.github.dezi.fboxtraffic
+- Restart: plasmoidviewer --applet com.github.dezihh.FB-Traffic-KDE
+- Re-register service: kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezihh.FB-Traffic-KDE
+- Update service: kpackagetool5 --upgrade ~/.local/share/plasma/plasmoids/com.github.dezihh.FB-Traffic-KDE
