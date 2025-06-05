@@ -2,7 +2,7 @@
   "KPlugin": {
     "Id": "com.github.dezihh.FB-Traffic-KDE",
     "Name": "FB-Traffic-KDE",
-    "Description": "Zeigt simulierten Upload/Download",
+    "Description": "Surveillance monitor for FritzBox as KDE Plasmoid Widget",
     "Version": "1.0",
     "Website": "https://github.com/dezihh/FB-Traffic-KDE",
     "License": "MIT",
