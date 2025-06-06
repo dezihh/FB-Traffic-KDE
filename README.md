@@ -4,6 +4,7 @@
  # FB-Meter: Fritz!Box Traffic Monitor Plasmoid
 
 FB-Meter is a KDE Plasma Plasmoid that displays the current upload and download speed of your AVM Fritz!Box. It provides a graphical representation of traffic history and numerical values in kB/s.
+![](mages/FB-Traffic-KDE.jpg) Screenshot
 
 ## Features
 
