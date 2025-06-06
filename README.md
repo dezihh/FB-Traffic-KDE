@@ -77,17 +77,14 @@ The directory structure should look like this:
 └── metadata.json
 ```
 
-### 4. Create Metadata File
+### 4. Register
 
-
-
-### 5. Restart or Refresh Plasma
-
-For Plasma to recognize the new Plasmoid, you either need to restart the Plasma shell (e.g., with `kquitapp5 plasmashell && kstart5 plasmashell` in a terminal via Alt+F2, or by logging out and back in) or try reloading the "Add Widgets" menu.
-
-### 6. Add Plasmoid
-
-After restarting, you should find "FB-Meter" in the list of available widgets and be able to add it to your desktop or panel.
+<li>Go to directory ~/.local/share/plasma/plasmoids/ </li> 
+<li>exectue ```kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde``` </li> 
+<li>execute ```kquitapp5 plasmashell && plasmashell &```</li> 
+<li>Right click on the surface and choose "Add miniprogram" </li>
+<li>Search and add "FB-Traffic-KDE</li>
+Optional: Right Click again and add "Editting Mode". Than you can move an resitze the widget
 
 ## Troubleshooting
 
@@ -96,10 +93,9 @@ After restarting, you should find "FB-Meter" in the list of available widgets an
 *   **"APIErr"**: This indicates a problem retrieving data from the Fritz!Box after the connection was established. This might be due to an incompatible Fritz!OS version or changed API endpoints. The script already tries to use common variants.
 *   **"Error", "ParseErr" in Plasmoid**: This usually points to an issue with the output of the `Traffic.py` script (e.g., not valid JSON or one of the error codes mentioned above). Check the script's output by running it manually in a terminal:
     ```bash
-    python ~/.local/share/plasma/plasmoids/com.example.fbmeter/contents/code/Traffic.py
+    python ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/contents/code/Traffic.py
     ```
-    (Adjust the path `com.example.fbmeter` to your chosen Plasmoid ID).
-*   **Plasmoid permanently shows "Loading..."**: The Python script is not being executed correctly or is not returning data. Check the paths in `main.qml` to the `Traffic.py` file (`plasmoid.file("code") + "/Traffic.py"`) and the script's execution permissions.
+*   **Plasmoid permanently shows "Loading..."**: The Python script is not being executed correctly or is not returning data. Check the paths in `main.qml` to the `Traffic.py` file (`plasmoid.file("code") + "Traffic.py"`) and the script's execution permissions.
 
 ```
 
