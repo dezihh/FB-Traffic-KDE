@@ -3,8 +3,9 @@
 
  # FB-Meter: Fritz!Box Traffic Monitor Plasmoid
 
-FB-Meter is a KDE Plasma Plasmoid that displays the current upload and download speed of your AVM Fritz!Box. It provides a graphical representation of traffic history and numerical values in kB/s.
-![](mages/FB-Traffic-KDE.jpg) Screenshot
+FB-Meter is a KDE Plasma Plasmoid that displays the current upload and download speed of your AVM Fritz!Box. It provides a graphical representation of traffic history and numerical values in kB/s.<br>
+![](images/FB-Traffic-KDE.jpg)
+
 
 ## Features
 
@@ -53,56 +54,32 @@ Replace `YOUR_FRITZBOX_PASSWORD` with your Fritz!Box password. The Fritz!Box use
 
 ### 3. Place Plasmoid Files
 
-1.  Create a folder for your Plasmoid, e.g., `~/.local/share/plasma/plasmoids/com.example.fbmeter/`
-    (The name `com.example.fbmeter` is an example of a unique identifier; you can use the one provided in `metadata.desktop` like `de.dezihh.fbmeter`).
+1.  Create a folder for your Plasmoid, e.g., `~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/`
 2.  Inside this folder, create a subfolder named `contents`.
 3.  Inside the `contents` folder, create another subfolder named `ui`.
 4.  Place the `main.qml` file into the `contents/ui/` folder.
 5.  Inside the `contents` folder, create another subfolder named `code`.
 6.  Place the `Traffic.py` file into the `contents/code/` folder. Ensure `Traffic.py` is executable:
     ```bash
-    chmod +x ~/.local/share/plasma/plasmoids/com.example.fbmeter/contents/code/Traffic.py
+    chmod +x ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/contents/code/Traffic.py
     ```
-    (Adjust the path `com.example.fbmeter` to your chosen Plasmoid ID).
 
 The directory structure should look like this:
 
 ```
-~/.local/share/plasma/plasmoids/com.example.fbmeter/
+~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/
 ├── contents/
 │   ├── code/
 │   │   └── Traffic.py
 │   └── ui/
 │       └── main.qml
-└── metadata.desktop  (see next step)
+│       └── qmldir
+└── metadata.json
 ```
 
 ### 4. Create Metadata File
 
-Create a file named `metadata.desktop` in the main directory of your Plasmoid folder (`~/.local/share/plasma/plasmoids/com.example.fbmeter/`) with the following content:
 
-```ini
-[Desktop Entry]
-Name=FB-Meter
-Comment=Displays Fritz!Box Upload/Download Traffic
-Icon=network-transmit-receive
-
-Type=Service
-ServiceTypes=Plasma/Applet
-
-X-Plasma-API=declarativeappletscript
-X-Plasma-MainScript=ui/main.qml
-X-KDE-PluginInfo-Author=YourName
-X-KDE-PluginInfo-Email=your.email@example.com
-X-KDE-PluginInfo-Name=com.example.fbmeter 
-X-KDE-PluginInfo-Version=1.0
-X-KDE-PluginInfo-Website=
-X-KDE-PluginInfo-Category=Utilities
-X-KDE-PluginInfo-Depends=
-X-KDE-PluginInfo-License=GPL
-X-KDE-PluginInfo-EnabledByDefault=true
-```
-Adjust `X-KDE-PluginInfo-Author`, `X-KDE-PluginInfo-Email`, and especially `X-KDE-PluginInfo-Name` (it should match your Plasmoid's folder name, e.g., `de.dezihh.fbmeter`).
 
 ### 5. Restart or Refresh Plasma
 
@@ -126,10 +103,10 @@ After restarting, you should find "FB-Meter" in the list of available widgets an
 
 ```
 
-**Debugging help:**
+** Debugging help: **
 - Restart Plasma interface: kquitapp5 plasmashell && plasmashell &
-- Restart: plasmoidviewer --applet com.github.dezihh.FB-Traffic-KDE
-- Re-register service: kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezihh.FB-Traffic-KDE
-- Update service: kpackagetool5 --upgrade ~/.local/share/plasma/plasmoids/com.github.dezihh.FB-Traffic-KDE
+- Restart: plasmoidviewer --applet com.github.dezihh.fbtraffickde
+- Re-register service: kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde
+- Update service: kpackagetool5 --upgrade ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde
 - Debugging: plasmoidviewer -a com.github.dezihh.fbtraffickde
 
