@@ -1,7 +1,129 @@
-# FB-Traffic-KDE
- Surveillance monitor for FritzBox as KDE Plasmoid Widget
+## FB-Traffic-KDE
+ #The FB-Traffic-KDE widget is inspired by the Windows tool Fritz!Box Traffic and provides a similar function for KDE (Linux). The current version has been tested under Plasma5.
 
- The FB-Traffic-KDE widget is inspired by the Windows tool Fritz!Box Traffic and provides a similar function for KDE (Linux). The current version has been tested under Plasma5.
+ # FB-Meter: Fritz!Box Traffic Monitor Plasmoid
+
+FB-Meter is a KDE Plasma Plasmoid that displays the current upload and download speed of your AVM Fritz!Box. It provides a graphical representation of traffic history and numerical values in kB/s.
+
+## Features
+
+*   Displays current upload and download rates in kB/s.
+*   Graphical history of upload and download traffic.
+*   Automatic scaling of graphs.
+*   Configurable update interval (via `main.qml` -> `trafficSource.interval`).
+*   Error handling for configuration, connection, and API issues with corresponding displays in the Plasmoid.
+*   Data retrieval via a Python script using the `fritzconnection` library.
+*   Configuration of Fritz!Box credentials via a separate INI file.
+
+## How it Works
+
+The Plasmoid consists of two main components:
+
+1.  `main.qml`: Defines the user interface and the logic for displaying data. It periodically calls the Python script.
+2.  `Traffic.py`: A Python script that connects to the Fritz!Box, retrieves traffic data, calculates the rates, and returns them to `main.qml` in JSON format.
+
+The Python script stores the previous state of the byte counters and the timestamp of the last fetch to calculate the difference and thus the rate per second. Negative rates (e.g., after a Fritz!Box reboot) are interpreted as 0.00 kB/s.
+
+## Installation and Configuration
+
+### 1. Prerequisites
+
+*   A working KDE Plasma Desktop environment.
+*   Python 3.x.
+*   The Python library `pip` (usually installed with Python).
+*   The Python library `fritzconnection`. Install it with:
+    ```bash
+    pip install fritzconnection
+    ```
+
+### 2. Create Configuration File
+
+Create a configuration file for the Python script at `~/.config/fritzplasmoid.ini` with the following content:
+
+```ini
+[credentials]
+password = YOUR_FRITZBOX_PASSWORD
+# host = fritz.box (optional, if different)
+```
+
+Replace `YOUR_FRITZBOX_PASSWORD` with your Fritz!Box password. The Fritz!Box user must have permission to retrieve information via the TR-064 interface (usually any user with access to the Fritz!Box interface).
+
+**Important:** Ensure that "Access for applications" (TR-064) is enabled in your Fritz!Box. You can usually find this under `Home Network -> Network -> Network Settings -> Access for Applications`.
+
+### 3. Place Plasmoid Files
+
+1.  Create a folder for your Plasmoid, e.g., `~/.local/share/plasma/plasmoids/com.example.fbmeter/`
+    (The name `com.example.fbmeter` is an example of a unique identifier; you can use the one provided in `metadata.desktop` like `de.dezihh.fbmeter`).
+2.  Inside this folder, create a subfolder named `contents`.
+3.  Inside the `contents` folder, create another subfolder named `ui`.
+4.  Place the `main.qml` file into the `contents/ui/` folder.
+5.  Inside the `contents` folder, create another subfolder named `code`.
+6.  Place the `Traffic.py` file into the `contents/code/` folder. Ensure `Traffic.py` is executable:
+    ```bash
+    chmod +x ~/.local/share/plasma/plasmoids/com.example.fbmeter/contents/code/Traffic.py
+    ```
+    (Adjust the path `com.example.fbmeter` to your chosen Plasmoid ID).
+
+The directory structure should look like this:
+
+```
+~/.local/share/plasma/plasmoids/com.example.fbmeter/
+├── contents/
+│   ├── code/
+│   │   └── Traffic.py
+│   └── ui/
+│       └── main.qml
+└── metadata.desktop  (see next step)
+```
+
+### 4. Create Metadata File
+
+Create a file named `metadata.desktop` in the main directory of your Plasmoid folder (`~/.local/share/plasma/plasmoids/com.example.fbmeter/`) with the following content:
+
+```ini
+[Desktop Entry]
+Name=FB-Meter
+Comment=Displays Fritz!Box Upload/Download Traffic
+Icon=network-transmit-receive
+
+Type=Service
+ServiceTypes=Plasma/Applet
+
+X-Plasma-API=declarativeappletscript
+X-Plasma-MainScript=ui/main.qml
+X-KDE-PluginInfo-Author=YourName
+X-KDE-PluginInfo-Email=your.email@example.com
+X-KDE-PluginInfo-Name=com.example.fbmeter 
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Website=
+X-KDE-PluginInfo-Category=Utilities
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=true
+```
+Adjust `X-KDE-PluginInfo-Author`, `X-KDE-PluginInfo-Email`, and especially `X-KDE-PluginInfo-Name` (it should match your Plasmoid's folder name, e.g., `de.dezihh.fbmeter`).
+
+### 5. Restart or Refresh Plasma
+
+For Plasma to recognize the new Plasmoid, you either need to restart the Plasma shell (e.g., with `kquitapp5 plasmashell && kstart5 plasmashell` in a terminal via Alt+F2, or by logging out and back in) or try reloading the "Add Widgets" menu.
+
+### 6. Add Plasmoid
+
+After restarting, you should find "FB-Meter" in the list of available widgets and be able to add it to your desktop or panel.
+
+## Troubleshooting
+
+*   **"NoCfg", "CfgKeyErr", "CfgReadErr"**: Check the configuration file `~/.config/fritzplasmoid.ini` for existence, correct paths, and content.
+*   **"ConErr"**: Check the network connection to the Fritz!Box, the hostname in the configuration file, and whether "Access for applications" (TR-064) is enabled in the Fritz!Box. Also, ensure the password is correct.
+*   **"APIErr"**: This indicates a problem retrieving data from the Fritz!Box after the connection was established. This might be due to an incompatible Fritz!OS version or changed API endpoints. The script already tries to use common variants.
+*   **"Error", "ParseErr" in Plasmoid**: This usually points to an issue with the output of the `Traffic.py` script (e.g., not valid JSON or one of the error codes mentioned above). Check the script's output by running it manually in a terminal:
+    ```bash
+    python ~/.local/share/plasma/plasmoids/com.example.fbmeter/contents/code/Traffic.py
+    ```
+    (Adjust the path `com.example.fbmeter` to your chosen Plasmoid ID).
+*   **Plasmoid permanently shows "Loading..."**: The Python script is not being executed correctly or is not returning data. Check the paths in `main.qml` to the `Traffic.py` file (`plasmoid.file("code") + "/Traffic.py"`) and the script's execution permissions.
+
+```
 
 **Debugging help:**
 - Restart Plasma interface: kquitapp5 plasmashell && plasmashell &
