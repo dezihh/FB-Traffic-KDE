@@ -52,7 +52,7 @@ PlasmoidItem {
     Plasma5Support.DataSource {
         id: trafficSource
         engine: "executable"
-        interval: root.refreshInterval * 1000
+        interval: root.refreshInterval * 1000  // Convert seconds to milliseconds
         
         // Connect to the script on component load
         Component.onCompleted: {
