@@ -17,5 +17,13 @@
             <default>100</default>
             <label>Maximum graph value in kB/s when not auto-scaling</label>
         </entry>
+        <entry name="showBackground" type="Bool">
+            <default>true</default>
+            <label>Show background</label>
+        </entry>
+        <entry name="backgroundOpacity" type="Double">
+            <default>0.85</default>
+            <label>Background opacity (0.0 to 1.0)</label>
+        </entry>
     </group>
 </kcfg>

@@ -13,20 +13,21 @@ PlasmoidItem {
     id: root
 
     // --- CONFIGURATION ---
-    Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
+    Plasmoid.backgroundHints: Plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
     preferredRepresentation: fullRepresentation
 
     // Configuration properties with defaults
     property int refreshInterval: Plasmoid.configuration.refreshInterval || 10
     property bool autoScaleGraphs: Plasmoid.configuration.autoScaleGraphs !== false
     property real manualMaxGraphValue: Plasmoid.configuration.manualMaxGraphValue || 100.0
+    property bool showBackground: Plasmoid.configuration.showBackground !== false
+    property real backgroundOpacity: Plasmoid.configuration.backgroundOpacity || 0.85
 
     // --- Graph data properties ---
     property var upHistory: []
     property var downHistory: []
     property int maxPoints: 50
-    property real maxValueForUploadGraph: manualMaxGraphValue
-    property real maxValueForDownloadGraph: manualMaxGraphValue
+    property real maxValueForGraph: manualMaxGraphValue
 
     // --- Display properties ---
     property string uploadValue: "Loading..."
@@ -34,19 +35,18 @@ PlasmoidItem {
     property bool hasError: false
 
     // --- Style properties ---
-    property int borderWidth: 2
-    property int topBottomMarginForContent: 5
+    property int borderWidth: 1
+    property int topBottomMarginForContent: 3
     property int labelSpacing: 2
-    property int graphSpacing: 5
+    property int graphSpacing: 3
     property int gridCells: 10
-    property int cornerRadius: 8
-    property int statsFontSize: 9
+    property int cornerRadius: 6
 
     // --- Colors ---
     property color uploadColor: "#4bb648"
     property color downloadColor: "#2fa1e8"
     property color loadingColor: "gray"
-    property color bgColor: "transparent"
+    property color bgColor: Qt.rgba(0.1, 0.1, 0.15, root.backgroundOpacity)
 
     // DataSource for executing the Python script
     Plasma5Support.DataSource {
@@ -139,53 +139,45 @@ PlasmoidItem {
         }
         root.downHistory = newDownHistory;
 
-        // Auto-scale graphs if enabled
+        // Auto-scale graphs if enabled - use the same scale for both
         if (root.autoScaleGraphs) {
-            var maxUp = root.manualMaxGraphValue;
+            var maxVal = root.manualMaxGraphValue;
             for (var i = 0; i < root.upHistory.length; i++) {
-                if (root.upHistory[i] > maxUp) maxUp = root.upHistory[i];
+                if (root.upHistory[i] > maxVal) maxVal = root.upHistory[i];
             }
-            root.maxValueForUploadGraph = Math.max(root.manualMaxGraphValue, maxUp > 0 ? maxUp * 1.1 : root.manualMaxGraphValue);
-
-            var maxDown = root.manualMaxGraphValue;
             for (var j = 0; j < root.downHistory.length; j++) {
-                if (root.downHistory[j] > maxDown) maxDown = root.downHistory[j];
+                if (root.downHistory[j] > maxVal) maxVal = root.downHistory[j];
             }
-            root.maxValueForDownloadGraph = Math.max(root.manualMaxGraphValue, maxDown > 0 ? maxDown * 1.1 : root.manualMaxGraphValue);
+            root.maxValueForGraph = Math.max(root.manualMaxGraphValue, maxVal > 0 ? maxVal * 1.1 : root.manualMaxGraphValue);
         } else {
-            root.maxValueForUploadGraph = root.manualMaxGraphValue;
-            root.maxValueForDownloadGraph = root.manualMaxGraphValue;
+            root.maxValueForGraph = root.manualMaxGraphValue;
         }
     }
 
     // Full representation of the plasmoid
     fullRepresentation: Item {
-        Layout.minimumWidth: 200
-        Layout.minimumHeight: 230
-        Layout.preferredWidth: 200
-        Layout.preferredHeight: 230
+        Layout.minimumWidth: 100
+        Layout.minimumHeight: 80
+        Layout.preferredWidth: 180
+        Layout.preferredHeight: 140
 
         Rectangle {
             id: representationArea
             anchors.fill: parent
-            color: root.bgColor
-            border.color: "white"
-            border.width: root.borderWidth
-            opacity: 0.85
+            color: root.showBackground ? root.bgColor : "transparent"
+            border.color: root.showBackground ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
+            border.width: root.showBackground ? root.borderWidth : 0
             radius: root.cornerRadius
 
             Item {
                 id: contentItem
                 anchors.fill: parent
-                anchors.margins: parent.border.width
+                anchors.margins: root.showBackground ? parent.border.width + 2 : 0
                 clip: true
 
-                readonly property int totalVerticalMarginsInContent: root.topBottomMarginForContent + root.labelSpacing + root.graphSpacing + root.topBottomMarginForContent
-                readonly property real availableHeightForElements: height - totalVerticalMarginsInContent
-                readonly property real titleAreaHeight: availableHeightForElements * 0.10
-                readonly property real labelsAreaHeight: availableHeightForElements * 0.14
-                readonly property real graphsTotalAreaHeight: availableHeightForElements * 0.76
-                readonly property real individualGraphHeight: graphsTotalAreaHeight / 2
+                // Dynamic font size based on widget height
+                readonly property int baseFontSize: Math.max(7, Math.min(12, contentItem.height / 12))
+                readonly property int titleFontSize: Math.max(8, Math.min(14, contentItem.height / 10))
 
                 // Title label
                 Text {
@@ -194,10 +186,10 @@ PlasmoidItem {
                     anchors.topMargin: root.topBottomMarginForContent
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: parent.width
-                    height: contentItem.titleAreaHeight
                     text: "FB-Traffic-KDE"
                     font.family: "Monospace"
                     font.bold: true
+                    font.pixelSize: contentItem.titleFontSize
                     color: "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -210,13 +202,14 @@ PlasmoidItem {
                     anchors.topMargin: root.labelSpacing
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    height: contentItem.labelsAreaHeight
+                    anchors.leftMargin: 4
+                    anchors.rightMargin: 4
                     spacing: root.labelSpacing
 
                     // Upload column
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 1
+                        spacing: 0
 
                         Text {
                             id: uploadIdentifierLabel
@@ -225,7 +218,7 @@ PlasmoidItem {
                             text: "▲ Up:"
                             font.family: "Monospace"
                             font.bold: true
-                            font.pointSize: root.statsFontSize
+                            font.pixelSize: contentItem.baseFontSize
                             color: root.uploadColor
                             horizontalAlignment: Text.AlignHCenter
                         }
@@ -237,7 +230,7 @@ PlasmoidItem {
                             text: root.uploadValue
                             font.family: "Monospace"
                             font.bold: true
-                            font.pointSize: root.statsFontSize
+                            font.pixelSize: contentItem.baseFontSize
                             color: root.hasError ? root.loadingColor : root.uploadColor
                             horizontalAlignment: Text.AlignHCenter
                         }
@@ -246,7 +239,7 @@ PlasmoidItem {
                     // Download column
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 1
+                        spacing: 0
 
                         Text {
                             id: downloadIdentifierLabel
@@ -255,7 +248,7 @@ PlasmoidItem {
                             text: "▼ Down:"
                             font.family: "Monospace"
                             font.bold: true
-                            font.pointSize: root.statsFontSize
+                            font.pixelSize: contentItem.baseFontSize
                             color: root.downloadColor
                             horizontalAlignment: Text.AlignHCenter
                         }
@@ -267,60 +260,103 @@ PlasmoidItem {
                             text: root.downloadValue
                             font.family: "Monospace"
                             font.bold: true
-                            font.pointSize: root.statsFontSize
+                            font.pixelSize: contentItem.baseFontSize
                             color: root.hasError ? root.loadingColor : root.downloadColor
                             horizontalAlignment: Text.AlignHCenter
                         }
                     }
                 }
 
-                // Upload graph canvas
+                // Combined graph canvas for both upload and download
                 Canvas {
-                    id: uploadGraph
+                    id: combinedGraph
                     anchors.top: statsRowLayout.bottom
                     anchors.topMargin: root.graphSpacing
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    height: contentItem.individualGraphHeight
-
-                    onPaint: {
-                        drawTrafficGraph(getContext("2d"), width, height, root.upHistory, root.maxValueForUploadGraph, root.uploadColor);
-                    }
-
-                    Connections {
-                        target: root
-                        function onUpHistoryChanged() { uploadGraph.requestPaint(); }
-                    }
-                }
-
-                // Download graph canvas
-                Canvas {
-                    id: downloadGraph
-                    anchors.top: uploadGraph.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: root.topBottomMarginForContent
+                    anchors.leftMargin: 2
+                    anchors.rightMargin: 2
 
                     onPaint: {
-                        drawTrafficGraph(getContext("2d"), width, height, root.downHistory, root.maxValueForDownloadGraph, root.downloadColor);
+                        drawCombinedTrafficGraph(getContext("2d"), width, height, root.upHistory, root.downHistory, root.maxValueForGraph);
                     }
 
                     Connections {
                         target: root
-                        function onDownHistoryChanged() { downloadGraph.requestPaint(); }
+                        function onUpHistoryChanged() { combinedGraph.requestPaint(); }
+                        function onDownHistoryChanged() { combinedGraph.requestPaint(); }
                     }
                 }
             }
         }
     }
 
-    // Function to draw traffic graph
-    function drawTrafficGraph(ctx, w, h, history, maxValue, graphColor) {
+    // Helper function to normalize a value between 0 and 1
+    function normalizeValue(value, maxValue) {
+        return Math.max(0, Math.min(1, value / maxValue));
+    }
+
+    // Helper function to calculate average of recent values in history
+    function getRecentAverage(history) {
+        if (history.length === 0) return 0;
+        var recentCount = Math.min(5, history.length);
+        var sum = 0;
+        for (var i = history.length - recentCount; i < history.length; i++) {
+            sum += history[i];
+        }
+        return sum / recentCount;
+    }
+
+    // Helper function to draw a single traffic area graph
+    function drawTrafficArea(ctx, w, h, history, maxValue, color, opacity) {
+        if (history.length === 0) return;
+
+        ctx.beginPath();
+        var firstXPos = 0;
+        var firstYPos = h * (1 - normalizeValue(history[0], maxValue));
+        ctx.moveTo(firstXPos, firstYPos);
+
+        for (var k = 0; k < history.length; k++) {
+            var xPos = (k / (Math.max(1, root.maxPoints - 1))) * w;
+            var yPos = h * (1 - normalizeValue(history[k], maxValue));
+            ctx.lineTo(xPos, yPos);
+        }
+
+        var lastXPos = ((history.length - 1) / (Math.max(1, root.maxPoints - 1))) * w;
+        if (history.length === 1) lastXPos = firstXPos;
+
+        ctx.lineTo(lastXPos, h);
+        ctx.lineTo(firstXPos, h);
+        ctx.closePath();
+
+        ctx.fillStyle = Qt.rgba(color.r, color.g, color.b, opacity);
+        ctx.fill();
+
+        // Draw line on top
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+
+        for (var m = 0; m < history.length; m++) {
+            var lineXPos = (m / (Math.max(1, root.maxPoints - 1))) * w;
+            var lineYPos = h * (1 - normalizeValue(history[m], maxValue));
+            if (m === 0) {
+                ctx.moveTo(lineXPos, lineYPos);
+            } else {
+                ctx.lineTo(lineXPos, lineYPos);
+            }
+        }
+        ctx.stroke();
+    }
+
+    // Function to draw combined traffic graph with both upload and download
+    function drawCombinedTrafficGraph(ctx, w, h, uploadHistory, downloadHistory, maxValue) {
         ctx.clearRect(0, 0, w, h);
 
         // Draw grid
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
         ctx.lineWidth = 1;
 
         if (root.gridCells > 0) {
@@ -346,50 +382,20 @@ PlasmoidItem {
             }
         }
 
-        // Draw filled area
-        if (history.length > 0) {
-            ctx.beginPath();
-            var firstXPos = 0;
-            var firstRawValue = history[0];
-            var firstNormalizedValue = Math.max(0, Math.min(1, firstRawValue / maxValue));
-            var firstYPos = h * (1 - firstNormalizedValue);
-            ctx.moveTo(firstXPos, firstYPos);
+        // Determine which graph is smaller (by recent average) to draw it in front
+        var uploadAvg = getRecentAverage(uploadHistory);
+        var downloadAvg = getRecentAverage(downloadHistory);
 
-            for (var k = 0; k < history.length; k++) {
-                var xPos = (k / (Math.max(1, root.maxPoints - 1))) * w;
-                var rawValue = history[k];
-                var normalizedValue = Math.max(0, Math.min(1, rawValue / maxValue));
-                var yPos = h * (1 - normalizedValue);
-                ctx.lineTo(xPos, yPos);
-            }
-
-            var lastXPos = ((history.length - 1) / (Math.max(1, root.maxPoints - 1))) * w;
-            if (history.length === 1) lastXPos = firstXPos;
-
-            ctx.lineTo(lastXPos, h);
-            ctx.lineTo(firstXPos, h);
-            ctx.closePath();
-
-            ctx.fillStyle = Qt.rgba(graphColor.r, graphColor.g, graphColor.b, 1.0);
-            ctx.fill();
-
-            // Draw line on top
-            ctx.strokeStyle = graphColor;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-
-            for (var m = 0; m < history.length; m++) {
-                var lineXPos = (m / (Math.max(1, root.maxPoints - 1))) * w;
-                var lineRawValue = history[m];
-                var lineNormalizedValue = Math.max(0, Math.min(1, lineRawValue / maxValue));
-                var lineYPos = h * (1 - lineNormalizedValue);
-                if (m === 0) {
-                    ctx.moveTo(lineXPos, lineYPos);
-                } else {
-                    ctx.lineTo(lineXPos, lineYPos);
-                }
-            }
-            ctx.stroke();
+        // Draw larger graph first (background), smaller graph second (foreground)
+        // This ensures the smaller graph is always visible
+        if (uploadAvg >= downloadAvg) {
+            // Upload is larger, draw it first (background)
+            drawTrafficArea(ctx, w, h, uploadHistory, maxValue, root.uploadColor, 0.5);
+            drawTrafficArea(ctx, w, h, downloadHistory, maxValue, root.downloadColor, 0.6);
+        } else {
+            // Download is larger, draw it first (background)
+            drawTrafficArea(ctx, w, h, downloadHistory, maxValue, root.downloadColor, 0.5);
+            drawTrafficArea(ctx, w, h, uploadHistory, maxValue, root.uploadColor, 0.6);
         }
     }
 }

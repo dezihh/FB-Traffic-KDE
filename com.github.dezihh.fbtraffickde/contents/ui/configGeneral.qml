@@ -9,6 +9,8 @@ Item {
     property alias cfg_refreshInterval: refreshIntervalSpin.value
     property alias cfg_autoScaleGraphs: autoScaleSwitch.checked
     property alias cfg_manualMaxGraphValue: maxGraphValueSpin.value
+    property alias cfg_showBackground: showBackgroundSwitch.checked
+    property alias cfg_backgroundOpacity: backgroundOpacitySlider.value
 
     Kirigami.FormLayout {
         anchors.left: parent.left
@@ -40,6 +42,38 @@ Item {
             to: 100000
             stepSize: 10
             value: 100
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: "Appearance"
+        }
+
+        CheckBox {
+            id: showBackgroundSwitch
+            Kirigami.FormData.label: "Background:"
+            text: "Show background"
+            checked: true
+        }
+
+        RowLayout {
+            visible: showBackgroundSwitch.checked
+            Kirigami.FormData.label: "Background Opacity:"
+            spacing: 10
+
+            Slider {
+                id: backgroundOpacitySlider
+                Layout.fillWidth: true
+                from: 0.0
+                to: 1.0
+                stepSize: 0.05
+                value: 0.85
+            }
+
+            Label {
+                text: Math.round(backgroundOpacitySlider.value * 100) + "%"
+                Layout.minimumWidth: 40
+            }
         }
 
         Label {
