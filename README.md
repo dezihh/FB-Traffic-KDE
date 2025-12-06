@@ -1,18 +1,18 @@
 ## FB-Traffic-KDE
- #The FB-Traffic-KDE widget is inspired by the Windows tool Fritz!Box Traffic and provides a similar function for KDE (Linux). The current version has been tested under Plasma5.
+# Fritz!Box Traffic Monitor Plasmoid for KDE Plasma 6
 
- # FB-Meter: Fritz!Box Traffic Monitor Plasmoid
+The FB-Traffic-KDE widget is inspired by the Windows tool Fritz!Box Traffic and provides a similar function for KDE (Linux). **This version is designed for KDE Plasma 6.**
 
-FB-Meter is a KDE Plasma Plasmoid that displays the current upload and download speed of your AVM Fritz!Box. It provides a graphical representation of traffic history and numerical values in kB/s.<br>
-![](images/FB-Traffic-KDE.jpg)
+FB-Traffic-KDE is a KDE Plasma Plasmoid that displays the current upload and download speed of your AVM Fritz!Box. It provides a graphical representation of traffic history and numerical values in kB/s.
 
+![FB-Traffic-KDE Screenshot](images/FB-Traffic-KDE.jpg)
 
 ## Features
 
 *   Displays current upload and download rates in kB/s.
 *   Graphical history of upload and download traffic.
 *   Automatic scaling of graphs.
-*   Configurable update interval (via `main.qml` -> `trafficSource.interval`).
+*   Configurable update interval via plasmoid settings.
 *   Error handling for configuration, connection, and API issues with corresponding displays in the Plasmoid.
 *   Data retrieval via a Python script using the `fritzconnection` library.
 *   Configuration of Fritz!Box credentials via a separate INI file.
@@ -21,7 +21,7 @@ FB-Meter is a KDE Plasma Plasmoid that displays the current upload and download 
 
 The Plasmoid consists of two main components:
 
-1.  `main.qml`: Defines the user interface and the logic for displaying data. It periodically calls the Python script.
+1.  `main.qml`: Defines the user interface and the logic for displaying data. It periodically calls the Python script using the Plasma5Support DataSource compatibility layer.
 2.  `Traffic.py`: A Python script that connects to the Fritz!Box, retrieves traffic data, calculates the rates, and returns them to `main.qml` in JSON format.
 
 The Python script stores the previous state of the byte counters and the timestamp of the last fetch to calculate the difference and thus the rate per second. Negative rates (e.g., after a Fritz!Box reboot) are interpreted as 0.00 kB/s.
@@ -30,9 +30,8 @@ The Python script stores the previous state of the byte counters and the timesta
 
 ### 1. Prerequisites
 
-*   A working KDE Plasma Desktop environment.
-*   Python 3.x.
-*   The Python library `pip` (usually installed with Python).
+*   **KDE Plasma 6.x** Desktop environment
+*   Python 3.x
 *   The Python library `fritzconnection`. Install it with:
     ```bash
     pip install fritzconnection
@@ -52,17 +51,22 @@ Replace `YOUR_FRITZBOX_PASSWORD` with your Fritz!Box password. The Fritz!Box use
 
 **Important:** Ensure that "Access for applications" (TR-064) is enabled in your Fritz!Box. You can usually find this under `Home Network -> Network -> Network Settings -> Access for Applications`.
 
-### 3. Place Plasmoid Files
+### 3. Install the Plasmoid
 
-1.  Create a folder for your Plasmoid, e.g., `~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/`
-2.  Inside this folder, create a subfolder named `contents`.
-3.  Inside the `contents` folder, create another subfolder named `ui`.
-4.  Place the `main.qml` file into the `contents/ui/` folder.
-5.  Inside the `contents` folder, create another subfolder named `code`.
-6.  Place the `Traffic.py` file into the `contents/code/` folder. Ensure `Traffic.py` is executable:
+**Option A: Manual Installation**
+
+1.  Clone or download this repository
+2.  Copy the `com.github.dezihh.fbtraffickde` folder to `~/.local/share/plasma/plasmoids/`
+3.  Make the Python script executable:
     ```bash
     chmod +x ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/contents/code/Traffic.py
     ```
+
+**Option B: Using kpackagetool6**
+
+```bash
+kpackagetool6 -t Plasma/Applet --install com.github.dezihh.fbtraffickde
+```
 
 The directory structure should look like this:
 
@@ -71,20 +75,23 @@ The directory structure should look like this:
 ├── contents/
 │   ├── code/
 │   │   └── Traffic.py
+│   ├── config/
+│   │   ├── config.qml
+│   │   └── main.xml
 │   └── ui/
-│       └── main.qml
-│       └── qmldir
+│       ├── main.qml
+│       └── configGeneral.qml
 └── metadata.json
 ```
 
-### 4. Register
+### 4. Add the Widget
 
-<li>Go to directory ~/.local/share/plasma/plasmoids/ </li> 
-<li>exectue ```kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde``` </li> 
-<li>execute ```kquitapp5 plasmashell && plasmashell &```</li> 
-<li>Right click on the surface and choose "Add miniprogram" </li>
-<li>Search and add "FB-Traffic-KDE</li>
-Optional: Right Click again and add "Editting Mode". Than you can move an resitze the widget
+1.  Right-click on your desktop or panel
+2.  Choose "Add Widgets" or "Add Widget..."
+3.  Search for "FB-Traffic-KDE"
+4.  Click to add it to your desktop/panel
+
+Optional: Right-click again and choose "Enter Edit Mode" to move and resize the widget.
 
 ## Troubleshooting
 
@@ -95,14 +102,38 @@ Optional: Right Click again and add "Editting Mode". Than you can move an resitz
     ```bash
     python ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde/contents/code/Traffic.py
     ```
-*   **Plasmoid permanently shows "Loading..."**: The Python script is not being executed correctly or is not returning data. Check the paths in `main.qml` to the `Traffic.py` file (`plasmoid.file("code") + "Traffic.py"`) and the script's execution permissions.
+*   **Plasmoid permanently shows "Loading..."**: The Python script is not being executed correctly or is not returning data. Check the script's execution permissions.
 
+## Debugging Help
+
+```bash
+# Restart Plasma interface (KDE 6)
+kquitapp6 plasmashell && plasmashell &
+
+# Test the plasmoid in plasmoidviewer
+plasmoidviewer -a com.github.dezihh.fbtraffickde
+
+# Re-register the plasmoid
+kpackagetool6 -t Plasma/Applet --install ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde
+
+# Update an existing installation
+kpackagetool6 -t Plasma/Applet --upgrade ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde
+
+# View plasma logs for debugging
+journalctl --user -u plasma-plasmashell -f
 ```
 
-** Debugging help: **
-- Restart Plasma interface: kquitapp5 plasmashell && plasmashell &
-- Restart: plasmoidviewer --applet com.github.dezihh.fbtraffickde
-- Re-register service: kpackagetool5 --install ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde
-- Update service: kpackagetool5 --upgrade ~/.local/share/plasma/plasmoids/com.github.dezihh.fbtraffickde
-- Debugging: plasmoidviewer -a com.github.dezihh.fbtraffickde
+## Version History
+
+*   **2.0**: Refactored for KDE Plasma 6 compatibility
+    *   Updated metadata.json format for Plasma 6
+    *   Migrated from deprecated PlasmaCore.DataSource to Plasma5Support.DataSource
+    *   Added PlasmoidItem as root element
+    *   Added configuration UI for refresh interval and graph settings
+    *   Improved directory structure following KDE 6 conventions
+*   **1.0**: Initial version for KDE Plasma 5
+
+## License
+
+MIT License
 
