@@ -298,6 +298,59 @@ PlasmoidItem {
         return Math.max(0, Math.min(1, value / maxValue));
     }
 
+    // Helper function to calculate average of recent values in history
+    function getRecentAverage(history) {
+        if (history.length === 0) return 0;
+        var recentCount = Math.min(5, history.length);
+        var sum = 0;
+        for (var i = history.length - recentCount; i < history.length; i++) {
+            sum += history[i];
+        }
+        return sum / recentCount;
+    }
+
+    // Helper function to draw a single traffic area graph
+    function drawTrafficArea(ctx, w, h, history, maxValue, color, opacity) {
+        if (history.length === 0) return;
+
+        ctx.beginPath();
+        var firstXPos = 0;
+        var firstYPos = h * (1 - normalizeValue(history[0], maxValue));
+        ctx.moveTo(firstXPos, firstYPos);
+
+        for (var k = 0; k < history.length; k++) {
+            var xPos = (k / (Math.max(1, root.maxPoints - 1))) * w;
+            var yPos = h * (1 - normalizeValue(history[k], maxValue));
+            ctx.lineTo(xPos, yPos);
+        }
+
+        var lastXPos = ((history.length - 1) / (Math.max(1, root.maxPoints - 1))) * w;
+        if (history.length === 1) lastXPos = firstXPos;
+
+        ctx.lineTo(lastXPos, h);
+        ctx.lineTo(firstXPos, h);
+        ctx.closePath();
+
+        ctx.fillStyle = Qt.rgba(color.r, color.g, color.b, opacity);
+        ctx.fill();
+
+        // Draw line on top
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+
+        for (var m = 0; m < history.length; m++) {
+            var lineXPos = (m / (Math.max(1, root.maxPoints - 1))) * w;
+            var lineYPos = h * (1 - normalizeValue(history[m], maxValue));
+            if (m === 0) {
+                ctx.moveTo(lineXPos, lineYPos);
+            } else {
+                ctx.lineTo(lineXPos, lineYPos);
+            }
+        }
+        ctx.stroke();
+    }
+
     // Function to draw combined traffic graph with both upload and download
     function drawCombinedTrafficGraph(ctx, w, h, uploadHistory, downloadHistory, maxValue) {
         ctx.clearRect(0, 0, w, h);
@@ -329,84 +382,20 @@ PlasmoidItem {
             }
         }
 
-        // Draw download area first (behind upload)
-        if (downloadHistory.length > 0) {
-            ctx.beginPath();
-            var firstXPos = 0;
-            var firstYPos = h * (1 - normalizeValue(downloadHistory[0], maxValue));
-            ctx.moveTo(firstXPos, firstYPos);
+        // Determine which graph is smaller (by recent average) to draw it in front
+        var uploadAvg = getRecentAverage(uploadHistory);
+        var downloadAvg = getRecentAverage(downloadHistory);
 
-            for (var k = 0; k < downloadHistory.length; k++) {
-                var xPos = (k / (Math.max(1, root.maxPoints - 1))) * w;
-                var yPos = h * (1 - normalizeValue(downloadHistory[k], maxValue));
-                ctx.lineTo(xPos, yPos);
-            }
-
-            var lastXPos = ((downloadHistory.length - 1) / (Math.max(1, root.maxPoints - 1))) * w;
-            if (downloadHistory.length === 1) lastXPos = firstXPos;
-
-            ctx.lineTo(lastXPos, h);
-            ctx.lineTo(firstXPos, h);
-            ctx.closePath();
-
-            ctx.fillStyle = Qt.rgba(root.downloadColor.r, root.downloadColor.g, root.downloadColor.b, 0.5);
-            ctx.fill();
-
-            // Draw line on top
-            ctx.strokeStyle = root.downloadColor;
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-
-            for (var m = 0; m < downloadHistory.length; m++) {
-                var lineXPos = (m / (Math.max(1, root.maxPoints - 1))) * w;
-                var lineYPos = h * (1 - normalizeValue(downloadHistory[m], maxValue));
-                if (m === 0) {
-                    ctx.moveTo(lineXPos, lineYPos);
-                } else {
-                    ctx.lineTo(lineXPos, lineYPos);
-                }
-            }
-            ctx.stroke();
-        }
-
-        // Draw upload area (in front with slightly higher opacity for visibility)
-        if (uploadHistory.length > 0) {
-            ctx.beginPath();
-            var upFirstXPos = 0;
-            var upFirstYPos = h * (1 - normalizeValue(uploadHistory[0], maxValue));
-            ctx.moveTo(upFirstXPos, upFirstYPos);
-
-            for (var n = 0; n < uploadHistory.length; n++) {
-                var upXPos = (n / (Math.max(1, root.maxPoints - 1))) * w;
-                var upYPos = h * (1 - normalizeValue(uploadHistory[n], maxValue));
-                ctx.lineTo(upXPos, upYPos);
-            }
-
-            var upLastXPos = ((uploadHistory.length - 1) / (Math.max(1, root.maxPoints - 1))) * w;
-            if (uploadHistory.length === 1) upLastXPos = upFirstXPos;
-
-            ctx.lineTo(upLastXPos, h);
-            ctx.lineTo(upFirstXPos, h);
-            ctx.closePath();
-
-            ctx.fillStyle = Qt.rgba(root.uploadColor.r, root.uploadColor.g, root.uploadColor.b, 0.6);
-            ctx.fill();
-
-            // Draw line on top
-            ctx.strokeStyle = root.uploadColor;
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-
-            for (var p = 0; p < uploadHistory.length; p++) {
-                var upLineXPos = (p / (Math.max(1, root.maxPoints - 1))) * w;
-                var upLineYPos = h * (1 - normalizeValue(uploadHistory[p], maxValue));
-                if (p === 0) {
-                    ctx.moveTo(upLineXPos, upLineYPos);
-                } else {
-                    ctx.lineTo(upLineXPos, upLineYPos);
-                }
-            }
-            ctx.stroke();
+        // Draw larger graph first (background), smaller graph second (foreground)
+        // This ensures the smaller graph is always visible
+        if (uploadAvg >= downloadAvg) {
+            // Upload is larger, draw it first (background)
+            drawTrafficArea(ctx, w, h, uploadHistory, maxValue, root.uploadColor, 0.5);
+            drawTrafficArea(ctx, w, h, downloadHistory, maxValue, root.downloadColor, 0.6);
+        } else {
+            // Download is larger, draw it first (background)
+            drawTrafficArea(ctx, w, h, downloadHistory, maxValue, root.downloadColor, 0.5);
+            drawTrafficArea(ctx, w, h, uploadHistory, maxValue, root.uploadColor, 0.6);
         }
     }
 }
