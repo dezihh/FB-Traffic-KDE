@@ -293,6 +293,11 @@ PlasmoidItem {
         }
     }
 
+    // Helper function to normalize a value between 0 and 1
+    function normalizeValue(value, maxValue) {
+        return Math.max(0, Math.min(1, value / maxValue));
+    }
+
     // Function to draw combined traffic graph with both upload and download
     function drawCombinedTrafficGraph(ctx, w, h, uploadHistory, downloadHistory, maxValue) {
         ctx.clearRect(0, 0, w, h);
@@ -328,16 +333,12 @@ PlasmoidItem {
         if (downloadHistory.length > 0) {
             ctx.beginPath();
             var firstXPos = 0;
-            var firstRawValue = downloadHistory[0];
-            var firstNormalizedValue = Math.max(0, Math.min(1, firstRawValue / maxValue));
-            var firstYPos = h * (1 - firstNormalizedValue);
+            var firstYPos = h * (1 - normalizeValue(downloadHistory[0], maxValue));
             ctx.moveTo(firstXPos, firstYPos);
 
             for (var k = 0; k < downloadHistory.length; k++) {
                 var xPos = (k / (Math.max(1, root.maxPoints - 1))) * w;
-                var rawValue = downloadHistory[k];
-                var normalizedValue = Math.max(0, Math.min(1, rawValue / maxValue));
-                var yPos = h * (1 - normalizedValue);
+                var yPos = h * (1 - normalizeValue(downloadHistory[k], maxValue));
                 ctx.lineTo(xPos, yPos);
             }
 
@@ -358,9 +359,7 @@ PlasmoidItem {
 
             for (var m = 0; m < downloadHistory.length; m++) {
                 var lineXPos = (m / (Math.max(1, root.maxPoints - 1))) * w;
-                var lineRawValue = downloadHistory[m];
-                var lineNormalizedValue = Math.max(0, Math.min(1, lineRawValue / maxValue));
-                var lineYPos = h * (1 - lineNormalizedValue);
+                var lineYPos = h * (1 - normalizeValue(downloadHistory[m], maxValue));
                 if (m === 0) {
                     ctx.moveTo(lineXPos, lineYPos);
                 } else {
@@ -370,20 +369,16 @@ PlasmoidItem {
             ctx.stroke();
         }
 
-        // Draw upload area (in front)
+        // Draw upload area (in front with slightly higher opacity for visibility)
         if (uploadHistory.length > 0) {
             ctx.beginPath();
             var upFirstXPos = 0;
-            var upFirstRawValue = uploadHistory[0];
-            var upFirstNormalizedValue = Math.max(0, Math.min(1, upFirstRawValue / maxValue));
-            var upFirstYPos = h * (1 - upFirstNormalizedValue);
+            var upFirstYPos = h * (1 - normalizeValue(uploadHistory[0], maxValue));
             ctx.moveTo(upFirstXPos, upFirstYPos);
 
             for (var n = 0; n < uploadHistory.length; n++) {
                 var upXPos = (n / (Math.max(1, root.maxPoints - 1))) * w;
-                var upRawValue = uploadHistory[n];
-                var upNormalizedValue = Math.max(0, Math.min(1, upRawValue / maxValue));
-                var upYPos = h * (1 - upNormalizedValue);
+                var upYPos = h * (1 - normalizeValue(uploadHistory[n], maxValue));
                 ctx.lineTo(upXPos, upYPos);
             }
 
@@ -394,7 +389,7 @@ PlasmoidItem {
             ctx.lineTo(upFirstXPos, h);
             ctx.closePath();
 
-            ctx.fillStyle = Qt.rgba(root.uploadColor.r, root.uploadColor.g, root.uploadColor.b, 0.7);
+            ctx.fillStyle = Qt.rgba(root.uploadColor.r, root.uploadColor.g, root.uploadColor.b, 0.6);
             ctx.fill();
 
             // Draw line on top
@@ -404,9 +399,7 @@ PlasmoidItem {
 
             for (var p = 0; p < uploadHistory.length; p++) {
                 var upLineXPos = (p / (Math.max(1, root.maxPoints - 1))) * w;
-                var upLineRawValue = uploadHistory[p];
-                var upLineNormalizedValue = Math.max(0, Math.min(1, upLineRawValue / maxValue));
-                var upLineYPos = h * (1 - upLineNormalizedValue);
+                var upLineYPos = h * (1 - normalizeValue(uploadHistory[p], maxValue));
                 if (p === 0) {
                     ctx.moveTo(upLineXPos, upLineYPos);
                 } else {
