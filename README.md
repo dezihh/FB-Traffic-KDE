@@ -76,7 +76,8 @@ The directory structure should look like this:
 │   ├── code/
 │   │   └── Traffic.py
 │   ├── config/
-│   │   └── config.qml
+│   │   ├── config.qml
+│   │   └── main.xml
 │   └── ui/
 │       ├── main.qml
 │       └── configGeneral.qml

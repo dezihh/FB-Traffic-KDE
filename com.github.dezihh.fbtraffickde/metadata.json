@@ -16,7 +16,5 @@
         "Website": "https://github.com/dezihh/FB-Traffic-KDE",
         "License": "MIT"
     },
-    "X-Plasma-API-Minimum-Version": "6.0",
-    "X-Plasma-Provides": ["org.kde.plasma.networkmonitor"],
-    "X-KDE-ConfigModule": "kcm_plasmaconfig"
+    "X-Plasma-API-Minimum-Version": "6.0"
 }
